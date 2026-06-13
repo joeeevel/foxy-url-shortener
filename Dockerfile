@@ -1,29 +1,33 @@
-# Use Node 20 (latest stable)
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 RUN apk add --no-cache openssl
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
-
-# Install dependencies
 RUN npm ci
-
-# Generate Prisma client
 RUN npx prisma generate
 
-# Copy source code
-COPY . .
-
-# Build TypeScript
+COPY tsconfig.json ./
+COPY src ./src/
 RUN npm run build
 
-# Expose port
+FROM node:20-alpine AS runner
+
+RUN apk add --no-cache openssl
+
+WORKDIR /app
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+
+USER appuser
+
 EXPOSE 3000
 
-# Start the app (run migrations first)
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]

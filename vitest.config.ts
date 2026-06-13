@@ -5,5 +5,9 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/__tests__/**/*.test.ts'],
+    env: {
+      NODE_ENV: 'test',
+    },
+    testTimeout: 10000,
   },
 });

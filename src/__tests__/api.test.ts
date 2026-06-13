@@ -7,12 +7,18 @@ const mockUrl = vi.hoisted(() => ({
   findUnique: vi.fn(),
 }));
 
+const mockPrisma = vi.hoisted(() => ({
+  url: mockUrl,
+  $queryRaw: vi.fn().mockResolvedValue([{ 1: 1 }]),
+  $disconnect: vi.fn(),
+}));
+
 const mockGetCachedUrl = vi.hoisted(() => vi.fn());
 const mockSetCachedUrl = vi.hoisted(() => vi.fn());
 
 vi.mock('@prisma/client', () => {
   function PrismaClient() {
-    return { url: mockUrl };
+    return mockPrisma;
   }
   return { PrismaClient };
 });
@@ -21,9 +27,10 @@ vi.mock('../services/cache.js', () => ({
   getCachedUrl: mockGetCachedUrl,
   setCachedUrl: mockSetCachedUrl,
   invalidateUrl: vi.fn(),
+  redis: null,
 }));
 
-const { app } = await import('../index.js');
+const { app } = await import('../app.js');
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -126,7 +133,7 @@ describe('GET /:shortCode', () => {
 
   it('returns 404 when not found', async () => {
     mockGetCachedUrl.mockResolvedValue(null);
-    mockUrl.update.mockRejectedValue(new Error('not found'));
+    mockUrl.update.mockRejectedValue(Object.assign(new Error('Record not found'), { code: 'P2025' }));
 
     const res = await request(app).get('/nonexistent');
 

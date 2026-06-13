@@ -25,7 +25,7 @@ function cleanupMemory(): void {
   }
 }
 
-let redis: Redis | null = null;
+export let redis: Redis | null = null;
 
 if (REDIS_URL) {
   redis = new Redis(REDIS_URL, {
