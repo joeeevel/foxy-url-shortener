@@ -119,7 +119,7 @@ describe('Security headers', () => {
     const res = await request(app).get('/health');
 
     expect(res.headers['x-content-type-options']).toBe('nosniff');
-    expect(res.headers['x-frame-options']).toBe('SAMEORIGIN');
+    expect(res.headers['x-frame-options']).toBe('DENY');
     expect(res.headers['x-download-options']).toBe('noopen');
   });
 

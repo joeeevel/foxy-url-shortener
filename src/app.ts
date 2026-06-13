@@ -8,8 +8,22 @@ import { notFound } from './middleware/notFound.js';
 const app = express();
 
 app.set('trust proxy', 1);
-app.use(helmet());
-app.use(cors());
+app.disable('x-powered-by');
+
+app.use(
+  helmet({
+    hsts: { maxAge: 31536000, preload: true },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        baseUri: ["'none'"],
+      },
+    },
+    frameguard: { action: 'deny' },
+  }),
+);
+
+app.use(cors({ methods: ['GET', 'POST'] }));
 app.use(express.json({ limit: '10kb' }));
 
 app.use(router);

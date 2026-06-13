@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { setCachedUrl } from '../services/cache.js';
 import { logger } from '../lib/logger.js';
+import { validateTargetUrl } from '../lib/validateUrl.js';
 
 const shortenSchema = z.object({
   url: z.string().url('Invalid URL format'),
@@ -18,6 +19,12 @@ export async function shorten(req: Request, res: Response): Promise<void> {
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message ?? 'Invalid request';
     res.status(400).json({ error: message });
+    return;
+  }
+
+  const validation = validateTargetUrl(parsed.data.url);
+  if (!validation.valid) {
+    res.status(400).json({ error: validation.error });
     return;
   }
 

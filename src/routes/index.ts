@@ -10,11 +10,12 @@ import {
   statsLimiter,
 } from '../services/rateLimit.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
+import { auth } from '../middleware/auth.js';
 
 const router = Router();
 
 router.get('/health', healthLimiter, asyncHandler(health));
-router.post('/shorten', shortenLimiter, asyncHandler(shorten));
+router.post('/shorten', auth, shortenLimiter, asyncHandler(shorten));
 router.get('/:shortCode', redirectLimiter, asyncHandler(redirect));
 router.get('/stats/:shortCode', statsLimiter, asyncHandler(stats));
 
