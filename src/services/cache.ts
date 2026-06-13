@@ -29,7 +29,13 @@ export let redis: ReturnType<typeof createClient> | null = null;
 
 if (REDIS_URL) {
   try {
-    redis = createClient({ url: REDIS_URL });
+    redis = createClient({
+      url: REDIS_URL,
+      socket: {
+        connectTimeout: 5000,
+        reconnectStrategy: false,
+      },
+    });
     redis.on('error', () => {});
   } catch {
     // invalid URL, skip Redis
