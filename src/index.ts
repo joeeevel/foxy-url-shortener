@@ -47,7 +47,7 @@ app.post('/shorten', shortenLimiter, async (req, res) => {
 
     res.json({
       success: true,
-      shortUrl: `http://localhost:3000/${newUrl.shortCode}`,
+      shortUrl: `${req.protocol}://${req.get('host')}/${newUrl.shortCode}`,
       shortCode: newUrl.shortCode,
       originalUrl: newUrl.original,
       clicks: newUrl.clicks,
