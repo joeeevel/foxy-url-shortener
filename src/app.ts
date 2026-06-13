@@ -5,7 +5,7 @@ import { notFound } from './middleware/notFound.js';
 
 const app = express();
 
-app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
+app.set('trust proxy', 1);
 app.use(express.json());
 
 app.use(router);
