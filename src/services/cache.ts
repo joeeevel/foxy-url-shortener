@@ -31,24 +31,22 @@ if (REDIS_URL) {
   try {
     redis = createClient({
       url: REDIS_URL,
-      socket: {
-        connectTimeout: 5000,
-        reconnectStrategy: false,
-      },
+      socket: { connectTimeout: 5000 },
     });
     redis.on('error', () => {});
+    redis.connect().catch(() => {
+      redis = null;
+    });
+    // Give it 6 seconds to connect, then fall back to memory
+    setTimeout(() => {
+      if (redis && !redis.isReady) {
+        redis.quit().catch(() => {});
+        redis = null;
+      }
+    }, 6000);
   } catch {
     // invalid URL, skip Redis
   }
-}
-
-let connecting: Promise<unknown> | null = null;
-
-function ensureConnected(): Promise<unknown> {
-  if (!redis) return Promise.resolve();
-  if (redis.isReady) return Promise.resolve();
-  if (!connecting) connecting = redis.connect().finally(() => { connecting = null; });
-  return connecting;
 }
 
 export function urlKey(shortCode: string): string {
@@ -63,9 +61,8 @@ export async function getCachedUrl(shortCode: string): Promise<{
 } | null> {
   const key = urlKey(shortCode);
 
-  if (redis) {
+  if (redis && redis.isReady) {
     try {
-      await ensureConnected();
       const data = await redis.get(key);
       if (data) return JSON.parse(data);
     } catch {
@@ -91,9 +88,8 @@ export async function setCachedUrl(
     updatedAt: data.updatedAt.toISOString(),
   });
 
-  if (redis) {
+  if (redis && redis.isReady) {
     try {
-      await ensureConnected();
       await redis.setEx(key, 3600, serialized);
       return;
     } catch {
@@ -111,9 +107,8 @@ export async function setCachedUrl(
 export async function invalidateUrl(shortCode: string): Promise<void> {
   const key = urlKey(shortCode);
 
-  if (redis) {
+  if (redis && redis.isReady) {
     try {
-      await ensureConnected();
       await redis.del(key);
     } catch {
       // ignore
