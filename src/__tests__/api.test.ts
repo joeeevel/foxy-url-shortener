@@ -38,6 +38,14 @@ describe('GET /health', () => {
     expect(res.body.service).toBe('url-shortener');
     expect(res.body).toHaveProperty('timestamp');
   });
+
+  it('includes rate limit headers', async () => {
+    const res = await request(app).get('/health');
+
+    expect(res.headers['ratelimit-limit']).toBeDefined();
+    expect(res.headers['ratelimit-remaining']).toBeDefined();
+    expect(res.headers['ratelimit-reset']).toBeDefined();
+  });
 });
 
 describe('POST /shorten', () => {
@@ -79,6 +87,15 @@ describe('POST /shorten', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Invalid URL format');
+  });
+
+  it('returns rate limit headers', async () => {
+    const res = await request(app)
+      .post('/shorten')
+      .send({ url: 'https://example.com' });
+
+    expect(res.headers['ratelimit-limit']).toBe('10');
+    expect(res.headers['ratelimit-remaining']).toBeDefined();
   });
 });
 

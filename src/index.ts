@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import express from 'express';
 import { getCachedUrl, setCachedUrl } from './services/cache.js';
+import { healthLimiter, shortenLimiter, redirectLimiter, statsLimiter } from './services/rateLimit.js';
 
 const prisma = new PrismaClient();
 const app = express();
@@ -11,7 +12,7 @@ function generateShortCode(): string {
   return Math.random().toString(36).substring(2, 8);
 }
 
-app.get('/health', (req, res) => {
+app.get('/health', healthLimiter, (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -19,7 +20,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.post('/shorten', async (req, res) => {
+app.post('/shorten', shortenLimiter, async (req, res) => {
   try {
     const { url } = req.body;
 
@@ -57,9 +58,11 @@ app.post('/shorten', async (req, res) => {
   }
 });
 
-app.get('/:shortCode', async (req, res) => {
+app.get('/:shortCode', redirectLimiter, async (req, res) => {
   try {
-    const { shortCode } = req.params;
+    const shortCode = req.params.shortCode;
+
+    if (!shortCode) return res.status(404).json({ error: 'Short URL not found' });
 
     const cached = await getCachedUrl(shortCode);
     if (cached) {
@@ -87,9 +90,11 @@ app.get('/:shortCode', async (req, res) => {
   }
 });
 
-app.get('/stats/:shortCode', async (req, res) => {
+app.get('/stats/:shortCode', statsLimiter, async (req, res) => {
   try {
-    const { shortCode } = req.params;
+    const shortCode = req.params.shortCode;
+
+    if (!shortCode) return res.status(404).json({ error: 'Short URL not found' });
 
     const cached = await getCachedUrl(shortCode);
     if (cached) {
