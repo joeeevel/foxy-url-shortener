@@ -15,7 +15,7 @@ export async function health(req: Request, res: Response): Promise<void> {
   }
 
   if (redis) {
-    checks.redis = redis.status === 'ready' ? 'ok' : 'connecting';
+    checks.redis = redis.isReady ? 'ok' : 'connecting';
   } else {
     checks.redis = 'unavailable';
   }

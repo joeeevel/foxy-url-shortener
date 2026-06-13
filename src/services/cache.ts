@@ -1,4 +1,4 @@
-import { Redis } from 'ioredis';
+import { createClient } from 'redis';
 
 const REDIS_URL = process.env.REDIS_URL;
 
@@ -25,28 +25,15 @@ function cleanupMemory(): void {
   }
 }
 
-export let redis: Redis | null = null;
+export let redis: ReturnType<typeof createClient> | null = null;
 
 if (REDIS_URL) {
   try {
-    const url = new URL(REDIS_URL);
-    redis = new Redis({
-      host: url.hostname,
-      port: Number(url.port) || 6379,
-      username: url.username || undefined,
-      password: url.password ? decodeURIComponent(url.password) : undefined,
-      maxRetriesPerRequest: 1,
-      retryStrategy() {
-        return null;
-      },
-      lazyConnect: true,
-      connectTimeout: 5000,
-      enableOfflineQueue: false,
-      ...(url.protocol === 'rediss:' ? { tls: { rejectUnauthorized: false } } : {}),
-    });
+    redis = createClient({ url: REDIS_URL });
     redis.on('error', () => {});
+    redis.connect().catch(() => {});
   } catch {
-    // REDIS_URL is invalid, skip Redis
+    // invalid URL, skip Redis
   }
 }
 
@@ -82,16 +69,16 @@ export async function setCachedUrl(
   data: { original: string; clicks: number; createdAt: Date; updatedAt: Date },
 ): Promise<void> {
   const key = urlKey(shortCode);
-  const serialized = {
+  const serialized = JSON.stringify({
     original: data.original,
     clicks: data.clicks,
     createdAt: data.createdAt.toISOString(),
     updatedAt: data.updatedAt.toISOString(),
-  };
+  });
 
   if (redis) {
     try {
-      await redis.setex(key, 3600, JSON.stringify(serialized));
+      await redis.setEx(key, 3600, serialized);
       return;
     } catch {
       // fall through to memory
@@ -99,7 +86,7 @@ export async function setCachedUrl(
   }
 
   memoryStore.set(key, {
-    data: serialized,
+    data: JSON.parse(serialized),
     expiresAt: Date.now() + URL_TTL_MS,
   });
   if (memoryStore.size % 50 === 0) cleanupMemory();

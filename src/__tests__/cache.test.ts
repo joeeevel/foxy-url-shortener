@@ -1,20 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { redisMock } = vi.hoisted(() => ({
-  redisMock: {
-    get: vi.fn(),
-    setex: vi.fn(),
-    del: vi.fn(),
-    on: vi.fn(),
-  },
+const mockClient = vi.hoisted(() => ({
+  get: vi.fn(),
+  setEx: vi.fn(),
+  del: vi.fn(),
+  on: vi.fn(),
+  connect: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('ioredis', () => {
-  function Redis() {
-    return redisMock;
-  }
-  return { Redis };
-});
+vi.mock('redis', () => ({
+  createClient: vi.fn(() => mockClient),
+}));
 
 const { urlKey, getCachedUrl, setCachedUrl, invalidateUrl } = await import('../services/cache.js');
 
