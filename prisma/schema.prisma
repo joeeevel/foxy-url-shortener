@@ -15,3 +15,9 @@ model Url {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model KryptLink {
+  id        String   @id @default(cuid())
+  payload   String   @db.Text
+  createdAt DateTime @default(now())
+}
