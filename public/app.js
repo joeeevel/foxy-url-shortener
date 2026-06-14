@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('stats-modal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal('stats-modal');
   });
+  document.getElementById('urls-body').addEventListener('click', onTableAction);
 });
 
 function getBase() {
@@ -78,13 +79,26 @@ function renderUrls(urls) {
       <td>${created}</td>
       <td>
         <div class="actions">
-          <button class="btn-sm" onclick="copyText('${shortUrl}')">Copy</button>
-          <button class="btn-sm" onclick="showStats('${u.shortCode}')">Stats</button>
-          <button class="btn-sm btn-del" onclick="deleteUrl('${u.shortCode}')">Delete</button>
+          <button class="btn-sm action-copy" data-url="${shortUrl}">Copy</button>
+          <button class="btn-sm action-stats" data-code="${u.shortCode}">Stats</button>
+          <button class="btn-sm btn-del action-delete" data-code="${u.shortCode}">Delete</button>
         </div>
       </td>
     `;
     tbody.appendChild(tr);
+  }
+}
+
+function onTableAction(e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+
+  if (btn.classList.contains('action-copy')) {
+    copyText(btn.dataset.url);
+  } else if (btn.classList.contains('action-stats')) {
+    showStats(btn.dataset.code);
+  } else if (btn.classList.contains('action-delete')) {
+    deleteUrl(btn.dataset.code);
   }
 }
 
