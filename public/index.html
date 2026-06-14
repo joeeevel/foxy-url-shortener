@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL Shortener</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>URL Shortener</h1>
+    <p class="subtitle">Shorten, share, and track your links</p>
+  </header>
+
+  <section class="card" id="create-section">
+    <h2>Create Short URL</h2>
+    <form id="create-form">
+      <div class="form-row">
+        <div class="form-group grow">
+          <label for="url">Original URL</label>
+          <input type="url" id="url" placeholder="https://example.com/very-long-url" required>
+        </div>
+        <div class="form-group">
+          <label for="custom-code">Custom Code (optional)</label>
+          <input type="text" id="custom-code" placeholder="my-link" maxlength="20" pattern="[a-zA-Z0-9_-]+">
+        </div>
+        <div class="form-group btn-group">
+          <label>&nbsp;</label>
+          <button type="submit" id="create-btn">Shorten</button>
+        </div>
+      </div>
+    </form>
+    <div id="result" class="hidden">
+      <label>Short URL</label>
+      <div class="result-row">
+        <input type="text" id="short-url" readonly>
+        <button class="btn-sm" id="copy-btn">Copy</button>
+        <button class="btn-sm" id="open-btn">Open</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="list-section">
+    <h2>Your Links</h2>
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Search URLs..." class="search-input">
+      <span id="total-count" class="count"></span>
+    </div>
+    <div id="loading">Loading...</div>
+    <div id="empty" class="hidden">No links yet. Create one above!</div>
+    <div id="table-wrap" class="hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>Short URL</th>
+            <th>Original URL</th>
+            <th class="num">Clicks</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="urls-body"></tbody>
+      </table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </section>
+</div>
+
+<div id="stats-modal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close" id="close-modal">&times;</span>
+    <h2>Stats</h2>
+    <div id="stats-body"></div>
+    <div id="qr-code" class="qr-wrap"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
