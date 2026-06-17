@@ -17,6 +17,7 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   urls          Url[]
+  apiKeys       ApiKey[]
 }
 
 model Url {
@@ -24,8 +25,31 @@ model Url {
   original  String   @db.Text
   shortCode String   @unique
   clicks    Int      @default(0)
+  active    Boolean  @default(true)
   userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clicksLog Click[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Click {
+  id        String   @id @default(cuid())
+  urlId     String
+  url       Url      @relation(fields: [urlId], references: [id], onDelete: Cascade)
+  referrer  String?
+  userAgent String?
+  country   String?
+  ip        String?
+  timestamp DateTime @default(now())
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastUsed  DateTime?
+  createdAt DateTime @default(now())
 }

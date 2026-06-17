@@ -4,7 +4,6 @@ import { getCachedUrl, setCachedUrl } from '../services/cache.js';
 
 export async function redirect(req: Request, res: Response): Promise<void> {
   const shortCode = req.params.shortCode;
-
   if (!shortCode) {
     res.status(404).json({ error: 'Short URL not found' });
     return;
@@ -20,6 +19,15 @@ export async function redirect(req: Request, res: Response): Promise<void> {
       .then((updated) => setCachedUrl(shortCode, updated))
       .catch(() => {});
 
+    prisma.click.create({
+      data: {
+        url: { connect: { shortCode } },
+        referrer: req.get('referer') || null,
+        userAgent: req.get('user-agent') || null,
+        ip: req.ip || null,
+      },
+    }).catch(() => {});
+
     res.redirect(cached.original);
     return;
   }
@@ -31,6 +39,15 @@ export async function redirect(req: Request, res: Response): Promise<void> {
     });
 
     await setCachedUrl(shortCode, url);
+
+    prisma.click.create({
+      data: {
+        urlId: url.id,
+        referrer: req.get('referer') || null,
+        userAgent: req.get('user-agent') || null,
+        ip: req.ip || null,
+      },
+    }).catch(() => {});
 
     res.redirect(url.original);
   } catch (error) {

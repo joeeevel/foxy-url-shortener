@@ -1,10 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 
+const mockClick = vi.hoisted(() => ({
+  create: vi.fn().mockResolvedValue({}),
+  findMany: vi.fn().mockResolvedValue([]),
+  count: vi.fn().mockResolvedValue(0),
+  groupBy: vi.fn().mockResolvedValue([]),
+}));
+
 const mockUrl = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
   findUnique: vi.fn(),
+  findFirst: vi.fn(),
+  delete: vi.fn(),
+  findMany: vi.fn().mockResolvedValue([]),
+  count: vi.fn().mockResolvedValue(0),
 }));
 
 const mockUser = vi.hoisted(() => ({
@@ -14,9 +25,20 @@ const mockUser = vi.hoisted(() => ({
   update: vi.fn(),
 }));
 
+const mockApiKey = vi.hoisted(() => ({
+  findUnique: vi.fn(),
+  findFirst: vi.fn(),
+  findMany: vi.fn().mockResolvedValue([]),
+  create: vi.fn(),
+  delete: vi.fn(),
+  update: vi.fn(),
+}));
+
 const mockPrisma = vi.hoisted(() => ({
   url: mockUrl,
   user: mockUser,
+  click: mockClick,
+  apiKey: mockApiKey,
   $queryRaw: vi.fn().mockResolvedValue([{ 1: 1 }]),
   $disconnect: vi.fn(),
 }));
