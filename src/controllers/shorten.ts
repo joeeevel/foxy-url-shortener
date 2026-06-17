@@ -7,6 +7,7 @@ import { validateTargetUrl } from '../lib/validateUrl.js';
 
 const shortenSchema = z.object({
   url: z.string().url('Invalid URL format'),
+  webhook: z.string().url('Invalid webhook URL').optional().or(z.literal('')),
 });
 
 function generateShortCode(): string {
@@ -34,6 +35,7 @@ export async function shorten(req: Request, res: Response): Promise<void> {
     data: {
       original: parsed.data.url,
       shortCode,
+      webhook: parsed.data.webhook || null,
     },
   });
 

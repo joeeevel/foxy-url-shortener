@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { getCachedUrl, setCachedUrl } from '../services/cache.js';
+import { fireWebhook } from '../services/webhook.js';
 
 export async function redirect(req: Request, res: Response): Promise<void> {
   const shortCode = req.params.shortCode;
@@ -26,6 +27,16 @@ export async function redirect(req: Request, res: Response): Promise<void> {
         userAgent: req.get('user-agent') || null,
         ip: req.ip || null,
       },
+    }).then(() => {
+      if (cached.webhook) {
+        fireWebhook(cached.webhook, {
+          event: 'click', shortCode, originalUrl: cached.original,
+          timestamp: new Date().toISOString(),
+          referrer: req.get('referer') || null,
+          userAgent: req.get('user-agent') || null,
+          ip: req.ip || null,
+        });
+      }
     }).catch(() => {});
 
     res.redirect(cached.original);
@@ -47,6 +58,16 @@ export async function redirect(req: Request, res: Response): Promise<void> {
         userAgent: req.get('user-agent') || null,
         ip: req.ip || null,
       },
+    }).then(() => {
+      if (url.webhook) {
+        fireWebhook(url.webhook, {
+          event: 'click', shortCode, originalUrl: url.original,
+          timestamp: new Date().toISOString(),
+          referrer: req.get('referer') || null,
+          userAgent: req.get('user-agent') || null,
+          ip: req.ip || null,
+        });
+      }
     }).catch(() => {});
 
     res.redirect(url.original);

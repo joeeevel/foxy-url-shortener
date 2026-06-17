@@ -29,5 +29,6 @@ CREATE INDEX "Click_urlId_idx" ON "Click"("urlId");
 ALTER TABLE "Click" ADD CONSTRAINT "Click_urlId_fkey" FOREIGN KEY ("urlId") REFERENCES "Url"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Add active column to Url if not exists
+-- Add columns to Url if not exists
 ALTER TABLE "Url" ADD COLUMN IF NOT EXISTS "active" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Url" ADD COLUMN IF NOT EXISTS "webhook" TEXT;

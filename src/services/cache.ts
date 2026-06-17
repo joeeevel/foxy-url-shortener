@@ -8,6 +8,7 @@ interface CacheEntry {
     clicks: number;
     createdAt: string;
     updatedAt: string;
+    webhook: string | null;
   };
   expiresAt: number;
 }
@@ -58,6 +59,7 @@ export async function getCachedUrl(shortCode: string): Promise<{
   clicks: number;
   createdAt: string;
   updatedAt: string;
+  webhook: string | null;
 } | null> {
   const key = urlKey(shortCode);
 
@@ -78,7 +80,7 @@ export async function getCachedUrl(shortCode: string): Promise<{
 
 export async function setCachedUrl(
   shortCode: string,
-  data: { original: string; clicks: number; createdAt: Date; updatedAt: Date },
+  data: { original: string; clicks: number; createdAt: Date; updatedAt: Date; webhook?: string | null },
 ): Promise<void> {
   const key = urlKey(shortCode);
   const serialized = JSON.stringify({
@@ -86,6 +88,7 @@ export async function setCachedUrl(
     clicks: data.clicks,
     createdAt: data.createdAt.toISOString(),
     updatedAt: data.updatedAt.toISOString(),
+    webhook: data.webhook ?? null,
   });
 
   if (redis && redis.isReady) {

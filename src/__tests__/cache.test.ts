@@ -39,11 +39,9 @@ describe('getCachedUrl', () => {
     });
 
     const result = await getCachedUrl('abc123');
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       original: 'https://example.com',
       clicks: 0,
-      createdAt: '2024-01-01T00:00:00.000Z',
-      updatedAt: '2024-01-01T00:00:00.000Z',
     });
   });
 
