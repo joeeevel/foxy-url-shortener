@@ -1,11 +1,18 @@
 import express from 'express';
 import session from 'express-session';
 import pgSession from 'connect-pg-simple';
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import passport from './services/auth.js';
 import { router } from './routes/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFound } from './middleware/notFound.js';
 import { env } from './lib/env.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const openapiSpec = JSON.parse(readFileSync(resolve(__dirname, '..', 'openapi.json'), 'utf-8'));
 
 const app = express();
 
@@ -48,6 +55,8 @@ if (!process.env.VITEST) {
   app.use(passport.initialize());
   app.use(passport.session());
 }
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
 app.use(router);
 

@@ -1,0 +1,370 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Foxy URL Shortener API",
+    "version": "1.0.0",
+    "description": "Shorten, track, and manage your URLs. Supports OAuth authentication and API keys.\n\n## Authentication\n- **Session Auth**: Login via Google or GitHub OAuth. Session cookie handled automatically.\n- **API Key Auth**: Pass `Authorization: Bearer <key>` header. Keys generated via `POST /api/keys`.\n\n## Rate Limiting\n- `POST /shorten`: 10 requests / 15 min\n- `GET /health`: 60 requests / 15 min\n- Redirects: 100 requests / 15 min\n- Stats: 30 requests / 15 min"
+  },
+  "servers": [
+    { "url": "/", "description": "Current server" }
+  ],
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        }
+      },
+      "ShortUrl": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "shortUrl": { "type": "string", "example": "https://example.com/abc123" },
+          "shortCode": { "type": "string", "example": "abc123" },
+          "originalUrl": { "type": "string", "example": "https://example.com/very-long-url" },
+          "clicks": { "type": "integer", "example": 0 }
+        }
+      },
+      "UrlList": {
+        "type": "object",
+        "properties": {
+          "urls": { "type": "array", "items": { "$ref": "#/components/schemas/UrlItem" } },
+          "total": { "type": "integer" },
+          "page": { "type": "integer" },
+          "pages": { "type": "integer" }
+        }
+      },
+      "UrlItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "shortCode": { "type": "string" },
+          "originalUrl": { "type": "string" },
+          "clicks": { "type": "integer" },
+          "totalClicks": { "type": "integer" },
+          "active": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "lastAccessed": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Analytics": {
+        "type": "object",
+        "properties": {
+          "shortCode": { "type": "string" },
+          "totalClicks": { "type": "integer" },
+          "page": { "type": "integer" },
+          "pages": { "type": "integer" },
+          "clicks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": { "type": "string", "format": "date-time" },
+                "referrer": { "type": "string", "nullable": true },
+                "userAgent": { "type": "string", "nullable": true },
+                "country": { "type": "string", "nullable": true }
+              }
+            }
+          },
+          "topReferrers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "referrer": { "type": "string" },
+                "count": { "type": "integer" }
+              }
+            }
+          }
+        }
+      },
+      "Stats": {
+        "type": "object",
+        "properties": {
+          "shortCode": { "type": "string" },
+          "originalUrl": { "type": "string" },
+          "clicks": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "lastAccessed": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ApiKeys": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "key": { "type": "string" },
+                "lastUsed": { "type": "string", "format": "date-time", "nullable": true },
+                "createdAt": { "type": "string", "format": "date-time" }
+              }
+            }
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "ok" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "service": { "type": "string", "example": "url-shortener" },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "server": { "type": "string" },
+              "database": { "type": "string" },
+              "redis": { "type": "string" }
+            }
+          }
+        }
+      },
+      "AuthStatus": {
+        "type": "object",
+        "properties": {
+          "authenticated": { "type": "boolean" },
+          "providers": {
+            "type": "object",
+            "properties": {
+              "google": { "type": "boolean" },
+              "github": { "type": "boolean" }
+            }
+          },
+          "user": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": { "type": "string" },
+              "email": { "type": "string", "nullable": true },
+              "name": { "type": "string", "nullable": true },
+              "avatarUrl": { "type": "string", "nullable": true }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key generated via POST /api/keys. Format: foxy_..."
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "connect.sid",
+        "description": "Session cookie set after OAuth login"
+      }
+    }
+  },
+  "security": [
+    { "cookieAuth": [] },
+    { "bearerAuth": [] }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "tags": ["Health"],
+        "security": [],
+        "responses": {
+          "200": { "description": "Service healthy", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } } }
+        }
+      }
+    },
+    "/shorten": {
+      "post": {
+        "summary": "Create a short URL",
+        "tags": ["URLs"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "format": "uri", "example": "https://example.com/very-long-url" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Short URL created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShortUrl" } } } },
+          "400": { "description": "Invalid URL" }
+        }
+      }
+    },
+    "/api/urls": {
+      "get": {
+        "summary": "List URLs",
+        "tags": ["URLs"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of URLs", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UrlList" } } } }
+        }
+      }
+    },
+    "/api/urls/{shortCode}": {
+      "patch": {
+        "summary": "Update a URL",
+        "tags": ["URLs"],
+        "parameters": [
+          { "name": "shortCode", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "original": { "type": "string", "format": "uri" },
+                  "active": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "URL updated" },
+          "404": { "description": "URL not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a URL",
+        "tags": ["URLs"],
+        "parameters": [
+          { "name": "shortCode", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "URL deleted" },
+          "404": { "description": "URL not found" }
+        }
+      }
+    },
+    "/stats/{shortCode}": {
+      "get": {
+        "summary": "Get URL stats",
+        "tags": ["Analytics"],
+        "security": [],
+        "parameters": [
+          { "name": "shortCode", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "URL stats", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Stats" } } } },
+          "404": { "description": "URL not found" }
+        }
+      }
+    },
+    "/api/analytics/{shortCode}": {
+      "get": {
+        "summary": "Get detailed analytics",
+        "tags": ["Analytics"],
+        "parameters": [
+          { "name": "shortCode", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } }
+        ],
+        "responses": {
+          "200": { "description": "Analytics data", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Analytics" } } } },
+          "404": { "description": "URL not found" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get current auth status",
+        "tags": ["Auth"],
+        "security": [],
+        "responses": {
+          "200": { "description": "Auth status", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthStatus" } } } }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout and destroy session",
+        "tags": ["Auth"],
+        "responses": {
+          "200": { "description": "Logged out" }
+        }
+      }
+    },
+    "/auth/google": {
+      "get": {
+        "summary": "Login with Google OAuth",
+        "tags": ["Auth"],
+        "security": [],
+        "responses": {
+          "302": { "description": "Redirect to Google" },
+          "501": { "description": "Google OAuth not configured" }
+        }
+      }
+    },
+    "/auth/github": {
+      "get": {
+        "summary": "Login with GitHub OAuth",
+        "tags": ["Auth"],
+        "security": [],
+        "responses": {
+          "302": { "description": "Redirect to GitHub" },
+          "501": { "description": "GitHub OAuth not configured" }
+        }
+      }
+    },
+    "/api/keys": {
+      "get": {
+        "summary": "List API keys",
+        "tags": ["API Keys"],
+        "responses": {
+          "200": { "description": "List of API keys", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiKeys" } } } },
+          "401": { "description": "Authentication required" }
+        }
+      },
+      "post": {
+        "summary": "Create a new API key",
+        "tags": ["API Keys"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string", "example": "Production CI" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "API key created" },
+          "401": { "description": "Authentication required" }
+        }
+      }
+    },
+    "/api/keys/{id}": {
+      "delete": {
+        "summary": "Delete/revoke an API key",
+        "tags": ["API Keys"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "API key revoked" },
+          "401": { "description": "Authentication required" },
+          "404": { "description": "API key not found" }
+        }
+      }
+    }
+  }
+}
