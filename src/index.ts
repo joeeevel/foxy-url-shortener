@@ -2,6 +2,7 @@ import { app } from './app.js';
 import { logger } from './lib/logger.js';
 import { prisma } from './lib/prisma.js';
 import { redis } from './services/cache.js';
+import { startHealthChecker } from './services/healthCheck.js';
 
 async function cleanupExpiredUrls() {
   try {
@@ -17,6 +18,7 @@ async function cleanupExpiredUrls() {
 if (!process.env.VITEST) {
   cleanupExpiredUrls();
   setInterval(cleanupExpiredUrls, 60 * 60 * 1000);
+  startHealthChecker();
 
   const PORT = process.env.PORT || 3000;
 
