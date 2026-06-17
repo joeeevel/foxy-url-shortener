@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma.js';
 import { setCachedUrl } from '../services/cache.js';
 import { logger } from '../lib/logger.js';
 import { validateTargetUrl } from '../lib/validateUrl.js';
+import { checkAbusiveUrl } from '../services/abuseCheck.js';
 
 const TTL_MAP: Record<string, number> = { '1h': 3600, '24h': 86400, '7d': 604800, '30d': 2592000 };
 
@@ -30,6 +31,13 @@ export async function shorten(req: Request, res: Response): Promise<void> {
   const validation = validateTargetUrl(parsed.data.url);
   if (!validation.valid) {
     res.status(400).json({ error: validation.error });
+    return;
+  }
+
+  const abuse = checkAbusiveUrl(parsed.data.url);
+  if (!abuse.safe) {
+    logger.warn({ url: parsed.data.url, reason: abuse.reason }, 'Abusive URL blocked');
+    res.status(400).json({ error: `URL blocked: ${abuse.reason}` });
     return;
   }
 

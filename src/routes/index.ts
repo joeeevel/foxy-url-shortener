@@ -5,6 +5,9 @@ import { redirect } from '../controllers/redirect.js';
 import { stats, analytics } from '../controllers/stats.js';
 import { listUrls, updateUrl, deleteUrl } from '../controllers/urls.js';
 import { listApiKeys, createApiKey, deleteApiKey } from '../controllers/apiKeys.js';
+import { bulkShorten } from '../controllers/bulk.js';
+import { exportAnalyticsCsv } from '../controllers/export.js';
+import { qrCode } from '../controllers/qr.js';
 import {
   googleAuthHandler, googleCallbackHandler,
   githubAuthHandler, githubCallbackHandler,
@@ -36,6 +39,7 @@ router.delete('/api/keys/:id', requireSessionAuth, asyncHandler(deleteApiKey));
 
 /* URLs */
 router.post('/shorten', shortenLimiter, asyncHandler(shorten));
+router.post('/api/bulk', shortenLimiter, asyncHandler(bulkShorten));
 router.get('/api/urls', optionalAuth, asyncHandler(listUrls));
 router.patch('/api/urls/:shortCode', optionalAuth, asyncHandler(updateUrl));
 router.delete('/api/urls/:shortCode', optionalAuth, asyncHandler(deleteUrl));
@@ -43,6 +47,10 @@ router.delete('/api/urls/:shortCode', optionalAuth, asyncHandler(deleteUrl));
 /* Analytics */
 router.get('/stats/:shortCode', statsLimiter, asyncHandler(stats));
 router.get('/api/analytics/:shortCode', optionalAuth, asyncHandler(analytics));
+router.get('/api/analytics/:shortCode/export', optionalAuth, asyncHandler(exportAnalyticsCsv));
+
+/* QR */
+router.get('/qr/:shortCode', asyncHandler(qrCode));
 
 /* Redirect */
 router.get('/:shortCode', redirectLimiter, asyncHandler(redirect));
