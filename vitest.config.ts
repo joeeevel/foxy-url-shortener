@@ -7,6 +7,8 @@ export default defineConfig({
     include: ['src/__tests__/**/*.test.ts'],
     env: {
       NODE_ENV: 'test',
+      VITEST: 'true',
+      DATABASE_URL: 'postgresql://mock:mock@localhost:5432/mock',
     },
     testTimeout: 10000,
   },

@@ -1,4 +1,3 @@
-import './lib/env.js';
 import { app } from './app.js';
 import { logger } from './lib/logger.js';
 import { prisma } from './lib/prisma.js';

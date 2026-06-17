@@ -1,39 +1,39 @@
 import { Router } from 'express';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { health } from '../controllers/health.js';
 import { shorten } from '../controllers/shorten.js';
 import { redirect } from '../controllers/redirect.js';
 import { stats } from '../controllers/stats.js';
-import { listUrls } from '../controllers/list.js';
-import { deleteUrl } from '../controllers/delete.js';
-import { kryptCreate, kryptGet } from '../controllers/kryptCreate.js';
+import {
+  googleAuthHandler, googleCallbackHandler,
+  githubAuthHandler, githubCallbackHandler,
+  me, logout,
+} from '../controllers/auth.js';
 import {
   healthLimiter,
   shortenLimiter,
   redirectLimiter,
   statsLimiter,
-  deleteLimiter,
 } from '../services/rateLimit.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
-import { auth } from '../middleware/auth.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const kryptHtml = resolve(__dirname, '..', '..', 'public', 'krypt.html');
 
 const router = Router();
 
+/* Health */
 router.get('/health', healthLimiter, asyncHandler(health));
-router.post('/shorten', auth, shortenLimiter, asyncHandler(shorten));
-router.get('/api/urls', asyncHandler(listUrls));
-router.delete('/api/urls/:shortCode', deleteLimiter, asyncHandler(deleteUrl));
+
+/* Auth */
+router.get('/auth/google', asyncHandler(googleAuthHandler));
+router.get('/auth/google/callback', asyncHandler(googleCallbackHandler));
+router.get('/auth/github', asyncHandler(githubAuthHandler));
+router.get('/auth/github/callback', asyncHandler(githubCallbackHandler));
+router.get('/auth/me', me);
+router.post('/auth/logout', logout);
+
+/* API */
+router.post('/shorten', shortenLimiter, asyncHandler(shorten));
 router.get('/stats/:shortCode', statsLimiter, asyncHandler(stats));
 
-router.post('/krypt', asyncHandler(kryptCreate));
-router.get('/api/krypt/:id', asyncHandler(kryptGet));
-router.get('/krypt', (req, res) => res.sendFile(kryptHtml));
-router.get('/q/:id', (req, res) => res.sendFile(kryptHtml));
-
+/* Redirect */
 router.get('/:shortCode', redirectLimiter, asyncHandler(redirect));
 
 export { router };

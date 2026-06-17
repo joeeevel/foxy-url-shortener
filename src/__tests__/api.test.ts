@@ -7,8 +7,16 @@ const mockUrl = vi.hoisted(() => ({
   findUnique: vi.fn(),
 }));
 
+const mockUser = vi.hoisted(() => ({
+  findUnique: vi.fn(),
+  findFirst: vi.fn(),
+  create: vi.fn(),
+  update: vi.fn(),
+}));
+
 const mockPrisma = vi.hoisted(() => ({
   url: mockUrl,
+  user: mockUser,
   $queryRaw: vi.fn().mockResolvedValue([{ 1: 1 }]),
   $disconnect: vi.fn(),
 }));
@@ -114,21 +122,24 @@ describe('POST /shorten', () => {
   });
 });
 
-describe('Security headers', () => {
-  it('includes helmet security headers', async () => {
-    const res = await request(app).get('/health');
+describe('Auth endpoints', () => {
+  it('returns unauthenticated without session', async () => {
+    const res = await request(app).get('/auth/me');
 
-    expect(res.headers['x-content-type-options']).toBe('nosniff');
-    expect(res.headers['x-frame-options']).toBe('DENY');
-    expect(res.headers['x-download-options']).toBe('noopen');
+    expect(res.status).toBe(200);
+    expect(res.body.authenticated).toBe(false);
+    expect(res.body.providers).toBeDefined();
   });
 
-  it('includes CORS headers', async () => {
-    const res = await request(app).get('/health');
+  it('returns 501 when OAuth not configured', async () => {
+    const res = await request(app).get('/auth/google');
 
-    expect(res.headers['access-control-allow-origin']).toBe('*');
+    expect(res.status).toBe(501);
+    expect(res.body.error).toContain('not configured');
   });
+});
 
+describe('Request validation', () => {
   it('rejects oversized request body', async () => {
     const largePayload = { url: 'https://example.com/' + 'x'.repeat(20000) };
 

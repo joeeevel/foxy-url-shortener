@@ -7,17 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  name          String?
+  avatarUrl     String?
+  googleId      String?  @unique
+  githubId      String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  urls          Url[]
+}
+
 model Url {
   id        String   @id @default(cuid())
   original  String   @db.Text
   shortCode String   @unique
   clicks    Int      @default(0)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model KryptLink {
-  id        String   @id @default(cuid())
-  payload   String   @db.Text
-  createdAt DateTime @default(now())
 }
