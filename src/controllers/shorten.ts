@@ -5,10 +5,13 @@ import { setCachedUrl } from '../services/cache.js';
 import { logger } from '../lib/logger.js';
 import { validateTargetUrl } from '../lib/validateUrl.js';
 
+const TTL_MAP: Record<string, number> = { '1h': 3600, '24h': 86400, '7d': 604800, '30d': 2592000 };
+
 const shortenSchema = z.object({
   url: z.string().url('Invalid URL format'),
   slug: z.string().regex(/^[a-zA-Z0-9_-]{3,30}$/, 'Slug must be 3-30 characters: letters, numbers, hyphens, underscores').optional(),
   webhook: z.string().url('Invalid webhook URL').optional().or(z.literal('')),
+  ttl: z.enum(['1h', '24h', '7d', '30d']).optional(),
 });
 
 function generateShortCode(): string {
@@ -40,11 +43,14 @@ export async function shorten(req: Request, res: Response): Promise<void> {
     }
   }
 
+  const expiresAt = parsed.data.ttl ? new Date(Date.now() + (TTL_MAP[parsed.data.ttl] ?? 0) * 1000) : null;
+
   const newUrl = await prisma.url.create({
     data: {
       original: parsed.data.url,
       shortCode,
       webhook: parsed.data.webhook || null,
+      expiresAt,
     },
   });
 
@@ -58,5 +64,6 @@ export async function shorten(req: Request, res: Response): Promise<void> {
     shortCode: newUrl.shortCode,
     originalUrl: newUrl.original,
     clicks: newUrl.clicks,
+    expiresAt: newUrl.expiresAt?.toISOString() ?? null,
   });
 }

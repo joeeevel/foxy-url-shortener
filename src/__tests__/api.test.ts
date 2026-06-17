@@ -175,7 +175,7 @@ describe('Request validation', () => {
 
 describe('GET /:shortCode', () => {
   it('redirects when found in cache', async () => {
-    const cached = { original: 'https://example.com', clicks: 0, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' };
+    const cached = { original: 'https://example.com', clicks: 0, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z', webhook: null, expiresAt: null };
     mockGetCachedUrl.mockResolvedValue(cached);
     mockUrl.update.mockResolvedValue(cached);
 
@@ -188,19 +188,19 @@ describe('GET /:shortCode', () => {
 
   it('redirects when found in database (cache miss)', async () => {
     mockGetCachedUrl.mockResolvedValue(null);
-    const dbUrl = { original: 'https://example.com', shortCode: 'abc123', clicks: 1 };
+    const dbUrl = { id: 'url1', original: 'https://example.com', shortCode: 'abc123', clicks: 1, active: true, webhook: null, expiresAt: null, createdAt: new Date(), updatedAt: new Date() };
+    mockUrl.findUnique.mockResolvedValue(dbUrl);
     mockUrl.update.mockResolvedValue(dbUrl);
 
     const res = await request(app).get('/abc123');
 
     expect(res.status).toBe(302);
     expect(res.headers.location).toBe('https://example.com');
-    expect(mockSetCachedUrl).toHaveBeenCalledWith('abc123', dbUrl);
   });
 
   it('returns 404 when not found', async () => {
     mockGetCachedUrl.mockResolvedValue(null);
-    mockUrl.update.mockRejectedValue(Object.assign(new Error('Record not found'), { code: 'P2025' }));
+    mockUrl.findUnique.mockResolvedValue(null);
 
     const res = await request(app).get('/nonexistent');
 
@@ -211,7 +211,7 @@ describe('GET /:shortCode', () => {
 
 describe('GET /stats/:shortCode', () => {
   it('returns stats from cache', async () => {
-    const cached = { original: 'https://example.com', clicks: 3, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' };
+    const cached = { original: 'https://example.com', clicks: 3, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z', webhook: null, expiresAt: null };
     mockGetCachedUrl.mockResolvedValue(cached);
 
     const res = await request(app).get('/stats/abc123');

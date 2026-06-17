@@ -3,7 +3,21 @@ import { logger } from './lib/logger.js';
 import { prisma } from './lib/prisma.js';
 import { redis } from './services/cache.js';
 
+async function cleanupExpiredUrls() {
+  try {
+    const { count } = await prisma.url.deleteMany({
+      where: { expiresAt: { lte: new Date(), not: null } },
+    });
+    if (count > 0) logger.info({ count }, 'Cleaned up expired URLs');
+  } catch (err) {
+    logger.error({ err }, 'Expired URL cleanup failed');
+  }
+}
+
 if (!process.env.VITEST) {
+  cleanupExpiredUrls();
+  setInterval(cleanupExpiredUrls, 60 * 60 * 1000);
+
   const PORT = process.env.PORT || 3000;
 
   const server = app.listen(PORT, () => {

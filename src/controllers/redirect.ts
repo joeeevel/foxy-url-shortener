@@ -3,6 +3,12 @@ import { prisma } from '../lib/prisma.js';
 import { getCachedUrl, setCachedUrl } from '../services/cache.js';
 import { fireWebhook } from '../services/webhook.js';
 
+function isExpired(expiresAt: string | Date | null | undefined): boolean {
+  if (!expiresAt) return false;
+  const expiry = typeof expiresAt === 'string' ? new Date(expiresAt) : expiresAt;
+  return expiry < new Date();
+}
+
 export async function redirect(req: Request, res: Response): Promise<void> {
   const shortCode = req.params.shortCode;
   if (!shortCode) {
@@ -12,6 +18,11 @@ export async function redirect(req: Request, res: Response): Promise<void> {
 
   const cached = await getCachedUrl(shortCode);
   if (cached) {
+    if (isExpired(cached.expiresAt)) {
+      res.status(410).json({ error: 'This link has expired' });
+      return;
+    }
+
     prisma.url
       .update({
         where: { shortCode },
@@ -44,11 +55,24 @@ export async function redirect(req: Request, res: Response): Promise<void> {
   }
 
   try {
-    const url = await prisma.url.update({
-      where: { shortCode },
+    const url = await prisma.url.findUnique({ where: { shortCode } });
+
+    if (!url || !url.active) {
+      res.status(404).json({ error: 'Short URL not found' });
+      return;
+    }
+
+    if (isExpired(url.expiresAt)) {
+      res.status(410).json({ error: 'This link has expired' });
+      return;
+    }
+
+    await prisma.url.update({
+      where: { id: url.id },
       data: { clicks: { increment: 1 } },
     });
 
+    url.clicks += 1;
     await setCachedUrl(shortCode, url);
 
     prisma.click.create({

@@ -9,15 +9,16 @@ interface CacheEntry {
     createdAt: string;
     updatedAt: string;
     webhook: string | null;
+    expiresAt: string | null;
   };
-  expiresAt: number;
+  cacheExpiresAt: number;
 }
 
 const memoryStore = new Map<string, CacheEntry>();
 const URL_TTL_MS = 3600 * 1000;
 
 function isExpired(entry: CacheEntry): boolean {
-  return Date.now() > entry.expiresAt;
+  return Date.now() > entry.cacheExpiresAt;
 }
 
 function cleanupMemory(): void {
@@ -60,6 +61,7 @@ export async function getCachedUrl(shortCode: string): Promise<{
   createdAt: string;
   updatedAt: string;
   webhook: string | null;
+  expiresAt: string | null;
 } | null> {
   const key = urlKey(shortCode);
 
@@ -80,7 +82,7 @@ export async function getCachedUrl(shortCode: string): Promise<{
 
 export async function setCachedUrl(
   shortCode: string,
-  data: { original: string; clicks: number; createdAt: Date; updatedAt: Date; webhook?: string | null },
+  data: { original: string; clicks: number; createdAt: Date; updatedAt: Date; webhook?: string | null; expiresAt?: Date | null },
 ): Promise<void> {
   const key = urlKey(shortCode);
   const serialized = JSON.stringify({
@@ -89,6 +91,7 @@ export async function setCachedUrl(
     createdAt: data.createdAt.toISOString(),
     updatedAt: data.updatedAt.toISOString(),
     webhook: data.webhook ?? null,
+    expiresAt: data.expiresAt?.toISOString() ?? null,
   });
 
   if (redis && redis.isReady) {
@@ -102,7 +105,7 @@ export async function setCachedUrl(
 
   memoryStore.set(key, {
     data: JSON.parse(serialized),
-    expiresAt: Date.now() + URL_TTL_MS,
+    cacheExpiresAt: Date.now() + URL_TTL_MS,
   });
   if (memoryStore.size % 50 === 0) cleanupMemory();
 }
