@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --foreground-color: #FFFDEF;
+}
+
+@theme {
+  --font-sf: var(--font-sf-pro);
+  --color-brand-primary: #FF9720;
+  --color-text-dark: #0D0802;
+  --color-subhead: #736B62;
+  --color-gray-1: #F2EFDA;
+  --color-gray-2: #999999;
+  --font-coolvetica: "coolvetica", sans-serif;
+  --text-6xl: 64px;
+  --scrollbar-track: #F2F0E3;
+  --scrollbar-thumb: #D9D7CB;
+  --scrollbar-hover: #CCCBBF;
+}
+
+@font-face {
+  font-family: "coolvetica";
+  src: url("./fonts/coolvetica.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+body {
+  font-family: var(--font-sf);
+  color: var(--color-text-dark);
+  background-color: var(--foreground-color);
+}
+
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-hover);
+  }
+
+}
