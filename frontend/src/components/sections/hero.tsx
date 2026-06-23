@@ -27,7 +27,7 @@ const FEATURES = [
 export function Hero() {
 
     return (
-        <div className="max-w-7xl mx-auto mt-16 flex flex-col items-center justify-center text-center">
+        <section className="max-w-7xl mx-auto mt-16 flex flex-col items-center justify-center text-center">
             <img src="./foxy-logo.svg" alt="Foxy Logo" srcSet="" className="select-none pointer-event-none w-full h-24" draggable="false" />
             <h1 className="font-coolvetica text-6xl text-text-dark mb-5 ">
                 Most shorteners log your links, <br></br> track your clicks, and sell your data
@@ -62,19 +62,19 @@ export function Hero() {
                 <Button variant='primary' size='lg' className='absolute! top-1/2 -translate-y-1/2 left-4 py-8 w-[235px]'>
 
                 </Button>
-                <span className='z-5 text-2xl font-semibold py-4 px-3'>
-                    Try <span className='font-coolvetica font-black tracking-wider'>Foxy</span> Private
+                <span className='z-5 text-2xl font-bold py-4 px-3 flex items-end justify-center gap-2'>
+                    Try <span><img src="./foxy-logo-text.svg" className='select-none' draggable={false} alt="Foxy Text Logo" /></span> Private
                 </span>
-                <span className='z-5 text-2xl font-semibold py-4 px-3'>
-                    Try <span className='font-coolvetica font-black tracking-wider'>Foxy</span> for free
+                <span className='z-5 text-2xl font-bold py-4 px-3 flex items-end justify-center gap-2'>
+                    Try <span><img src="./foxy-logo-text.svg" className='select-none' draggable={false} alt="Foxy Text Logo" /></span> for free
                 </span>
             </div>
 
-            <div className='text-xl font-sf'>
+            <div className='text-xl font-sf text-subhead'>
                 <p>
                     Zero-Knowledge encryption. Your URLs never touch our servers. <br /> Not even we can see them.
                 </p>
             </div>
-        </div>
+        </section>
     );
 }
