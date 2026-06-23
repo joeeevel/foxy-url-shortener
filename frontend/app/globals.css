@@ -29,6 +29,13 @@ body {
   font-family: var(--font-sf);
   color: var(--color-text-dark);
   background-color: var(--foreground-color);
+  scroll-behavior: smooth;
+  
+}
+
+::selection {
+  background-color: var(--color-brand-primary);
+  color: var(--foreground-color);
 }
 
 

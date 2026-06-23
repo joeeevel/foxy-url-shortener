@@ -1,9 +1,13 @@
 "use client";
 import Button from "../ui/Button";
+import { useState } from "react";
 import CheckMarkIcon from "@iconify-react/openmoji/check-mark";
 import CrossMarkIcon from "@iconify-react/openmoji/cross-mark";
 
 export function Pricing() {
+  const [activeTier, setActiveTier] = useState<"free" | "private">("free");
+  const [pressed, setPressed] = useState<"free" | "private" | null>(null);
+
   return (
     <section className="max-w-7xl mx-auto mt-24 flex flex-col items-center justify-center text-center">
       <h2 className="text-4xl font-bold">Pricing Section</h2>
@@ -89,12 +93,27 @@ export function Pricing() {
         <Button
           variant="primary"
           size="lg"
-          className="absolute! top-1/2 -translate-y-1/2 left-4 py-8 w-58.25"
-        ></Button>
-        <span className="z-5 text-2xl font-bold py-4 px-3 flex items-end justify-center gap-2">
+          pressed={pressed !== null}
+          className={`absolute! top-1/2 -translate-y-1/2 left-4 py-8 w-58.25 transition-transform duration-300 ease-in-out ${activeTier === "free" ? "translate-x-0" : "translate-x-58.75"}`}
+        >{""}</Button>
+        <span
+          className={`z-5 text-2xl font-bold py-4 px-3 flex items-end justify-center gap-2 cursor-pointer transition-transform duration-150 ease-out ${pressed === "free" ? "scale-95 translate-y" : "scale-100 translate-y-0"}`}
+          onMouseEnter={() => setActiveTier("free")}
+          onClick={() => setActiveTier("free")}
+          onMouseDown={() => setPressed("free")}
+          onMouseUp={() => setPressed(null)}
+          onMouseLeave={() => setPressed(null)}
+        >
             Start your free trial
         </span>
-        <span className="z-5 text-2xl font-bold py-4 px-3 flex items-end justify-center gap-2">
+        <span
+          className={`z-5 text-2xl font-bold py-4 px-3 flex items-end justify-center gap-2 cursor-pointer transition-transform duration-150 ease-out ${pressed === "private" ? "scale-95 translate-y" : "scale-100 translate-y-0"}`}
+          onMouseEnter={() => setActiveTier("private")}
+          onClick={() => setActiveTier("private")}
+          onMouseDown={() => setPressed("private")}
+          onMouseUp={() => setPressed(null)}
+          onMouseLeave={() => setPressed(null)}
+        >
           Try{" "}
           <span>
             <img

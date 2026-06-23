@@ -1,5 +1,7 @@
 'use client';
 
+import ToggleButton from "../ui/ToggleButton";
+
 export function Features() {
   const STORY = [
     {
@@ -19,7 +21,7 @@ export function Features() {
     },
   ];
   return (
-    <section className="max-w-7xl mx-auto mt-24 flex flex-col items-center justify-center text-center">
+    <section className="max-w-7xl mx-auto mt-48 flex flex-col items-center justify-center text-center">
       <h2 className="text-4xl font-bold">
         Every URL shortener sells something. <br /> We sell{" "}
         <span className="text-brand-primary">privacy</span>.
@@ -54,17 +56,20 @@ export function Features() {
             className="select-none pointer-event-none"
             draggable="false"
           />
-          <span className="text-[26px] font-bold px-3 flex items-end justify-center gap-2 absolute bottom-10 left-1/2 -translate-x-1/2 leading-tight">
-            <span>
-              <img
-                src="./foxy-logo-text.svg"
-                className="select-none"
-                draggable={false}
-                alt="Foxy Text Logo"
-              />
-            </span>{" "}
-            Private
-          </span>
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center justify-center w-full"> 
+            <span className="text-[26px] font-bold px-3 flex items-end justify-center gap-2  leading-tight">
+              <span>
+                <img
+                  src="./foxy-logo-text.svg"
+                  className="select-none"
+                  draggable={false}
+                  alt="Foxy Text Logo"
+                />
+              </span>{" "}
+              Private
+            </span>
+            <ToggleButton />
+          </div>
         </div>
       </div>
         <p className='text-xl font-sf text-subhead'>Free for casual. Private for serious. Both open source.</p>

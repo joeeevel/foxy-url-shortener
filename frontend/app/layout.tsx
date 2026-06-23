@@ -7,6 +7,8 @@ import localFont from 'next/font/local';
 import "./globals.css";
 import { Features } from "@/src/components/sections/features";
 import { Pricing } from "@/src/components/sections/pricing";
+import { CTA } from "@/src/components/sections/cta";
+import { Footer } from "@/src/components/layout/footer";
 const sfPro = localFont({
   src: [
     {
@@ -83,8 +85,9 @@ export default function RootLayout({
           <Hero />
           <Features />
           <Pricing />
+          <CTA />
         </main>
-
+      <Footer />
 
       </body>
     </html>
